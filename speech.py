@@ -1,7 +1,6 @@
 import streamlit as st
 import nltk
 import speech_recognition as sr
-import sounddevice as sd
 import numpy as np
 import random
 
@@ -27,18 +26,12 @@ def chatbot_response(user_input):
     return "Sorry, I didn’t understand that."
 
 # ---------------------------
-# Step 2: Record audio without PyAudio
+# Step 2: Speech Recognition
 # ---------------------------
-def record_audio(duration=5, fs=44100):
-    st.write("🎤 Recording...")
-    recording = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype='int16')
-    sd.wait()
-    return np.squeeze(recording)
-
-def speech_to_text():
+def speech_from_file(uploaded_file):
     recognizer = sr.Recognizer()
-    audio_data = record_audio()
-    audio = sr.AudioData(audio_data.tobytes(), 44100, 2)
+    with sr.AudioFile(uploaded_file) as source:
+        audio = recognizer.record(source)
     try:
         return recognizer.recognize_google(audio)
     except sr.UnknownValueError:
@@ -49,9 +42,9 @@ def speech_to_text():
 # ---------------------------
 # Step 3: Streamlit App
 # ---------------------------
-st.title("🗣️ Speech-Enabled Chatbot (No PyAudio)")
+st.title("🗣️ Speech-Enabled Chatbot")
 
-mode = st.radio("Choose input mode:", ("Text", "Speech"))
+mode = st.radio("Choose input mode:", ("Text", "Upload Audio File"))
 
 if mode == "Text":
     user_input = st.text_input("Type your message here:")
@@ -61,9 +54,10 @@ if mode == "Text":
             st.write(f"**You:** {user_input}")
             st.write(f"**Bot:** {bot_response}")
 
-elif mode == "Speech":
-    if st.button("Speak"):
-        user_input = speech_to_text()
+elif mode == "Upload Audio File":
+    uploaded_file = st.file_uploader("Upload an audio file", type=["wav", "flac", "mp3"])
+    if uploaded_file is not None:
+        user_input = speech_from_file(uploaded_file)
         st.write(f"**You (speech):** {user_input}")
         bot_response = chatbot_response(user_input)
         st.write(f"**Bot:** {bot_response}")
