@@ -1,7 +1,6 @@
 import streamlit as st
 import nltk
 import speech_recognition as sr
-import numpy as np
 import random
 
 # ---------------------------
@@ -26,14 +25,14 @@ def chatbot_response(user_input):
     return "Sorry, I didn’t understand that."
 
 # ---------------------------
-# Step 2: Speech Recognition
+# Step 2: Speech-to-text using st.audio_input
 # ---------------------------
-def speech_from_file(uploaded_file):
+def speech_to_text(audio_file):
     recognizer = sr.Recognizer()
-    with sr.AudioFile(uploaded_file) as source:
-        audio = recognizer.record(source)
+    with sr.AudioFile(audio_file) as source:
+        audio_data = recognizer.record(source)
     try:
-        return recognizer.recognize_google(audio)
+        return recognizer.recognize_google(audio_data)
     except sr.UnknownValueError:
         return "Sorry, I could not understand the audio."
     except sr.RequestError:
@@ -42,9 +41,9 @@ def speech_from_file(uploaded_file):
 # ---------------------------
 # Step 3: Streamlit App
 # ---------------------------
-st.title("🗣️ Speech-Enabled Chatbot")
+st.title("🗣️ Speech-Enabled Chatbot (Streamlit Native)")
 
-mode = st.radio("Choose input mode:", ("Text", "Upload Audio File"))
+mode = st.radio("Choose input mode:", ("Text", "Speech"))
 
 if mode == "Text":
     user_input = st.text_input("Type your message here:")
@@ -54,10 +53,10 @@ if mode == "Text":
             st.write(f"**You:** {user_input}")
             st.write(f"**Bot:** {bot_response}")
 
-elif mode == "Upload Audio File":
-    uploaded_file = st.file_uploader("Upload an audio file", type=["wav", "flac", "mp3"])
-    if uploaded_file is not None:
-        user_input = speech_from_file(uploaded_file)
-        st.write(f"**You (speech):** {user_input}")
-        bot_response = chatbot_response(user_input)
+elif mode == "Speech":
+    audio_file = st.audio_input("🎤 Record or upload your voice")
+    if audio_file is not None:
+        text = speech_to_text(audio_file)
+        st.write(f"**You (speech):** {text}")
+        bot_response = chatbot_response(text)
         st.write(f"**Bot:** {bot_response}")
