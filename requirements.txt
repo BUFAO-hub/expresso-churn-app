@@ -6,4 +6,6 @@ matplotlib
 nltk
 opencv-python-headless
 SpeechRecognition
+sounddevice
+
 
